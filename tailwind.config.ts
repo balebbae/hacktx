@@ -51,8 +51,10 @@ const config: Config = {
           },
         },
       },
-
       colors: {
+        main: "#006d77",
+        prev: "#83c5be",
+        next: "#edf6f9",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
