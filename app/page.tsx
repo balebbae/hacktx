@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import CameraComponent from "@/components/CameraComponent";
 import Link from "next/link";
 
 export default function GetStartedPage() {
@@ -32,6 +33,9 @@ export default function GetStartedPage() {
             Get Started
           </Button>
         </Link>
+      </div>
+      <div>
+        <CameraComponent></CameraComponent>
       </div>
     </div>
   );
