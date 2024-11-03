@@ -2,7 +2,7 @@
 
 import React, { useContext, useEffect, useState } from "react";
 import { SocketContext } from "./SocketContext";
-import WebcamStream from "./WebcamStreamCapture";
+import WebcamStream from "@/components/WebcamStreamCapture";
 import DrowningCard from "./DrowningCard";
 
 const DrownDetection: React.FC = () => {
@@ -14,8 +14,12 @@ const DrownDetection: React.FC = () => {
   useEffect(() => {
     if (socket) {
       socket.on("drowning_status", (data: any) => {
-        console.log(data);
-        setIsAlert(data.is_drowning);
+        console.log("Received drowning_status:", data);
+        if (data.error) {
+          console.error("Server error:", data.error);
+        } else {
+          setIsAlert(data.is_drowning);
+        }
       });
     }
 
@@ -49,12 +53,19 @@ const DrownDetection: React.FC = () => {
     };
   }, [isAlert, warningSound]);
 
-  const handleFrameCaptured = (dataURL: string) => {
-    if (!socket) {
+  const handleFrameCaptured = (base64Image: string) => {
+    if (!socket || !socket.connected) {
       console.error("Socket not connected yet");
       return;
     }
-    socket.emit("frame", { frame: dataURL });
+
+    if (!base64Image) {
+      console.error("Captured image is empty or undefined");
+      return;
+    }
+
+    console.log(`Emitting frame of size: ${base64Image.length}`);
+    socket.emit("frame", { frame: base64Image });
   };
 
   if (!socket) {
@@ -71,7 +82,7 @@ const DrownDetection: React.FC = () => {
           </div>
         </div>
       )}
-      {isAlert && <DrowningCard />}
+      <DrowningCard />
     </div>
   );
 };

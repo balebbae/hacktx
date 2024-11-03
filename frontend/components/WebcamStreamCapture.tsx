@@ -4,13 +4,13 @@
 import React, { useEffect, useRef } from "react";
 
 interface WebcamStreamProps {
-  onFrameCaptured: (dataURL: string) => void;
+  onFrameCaptured: (base64Image: string) => void;
 }
 
 const WebcamStream: React.FC<WebcamStreamProps> = ({ onFrameCaptured }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null); // To hold the interval ID
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const startWebcam = async () => {
@@ -20,14 +20,11 @@ const WebcamStream: React.FC<WebcamStreamProps> = ({ onFrameCaptured }) => {
         });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-
-          // Play video once metadata is loaded to avoid timing issues
           videoRef.current.onloadedmetadata = () => {
             videoRef.current?.play().catch((error) => {
               console.error("Error playing video:", error);
             });
           };
-
           startVideoProcessing();
         }
       } catch (error) {
@@ -37,14 +34,11 @@ const WebcamStream: React.FC<WebcamStreamProps> = ({ onFrameCaptured }) => {
 
     startWebcam();
 
-    // Cleanup the stream when the component is unmounted
     return () => {
       if (videoRef.current && videoRef.current.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream;
         stream.getTracks().forEach((track) => track.stop());
       }
-
-      // Clear the interval when the component is unmounted
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
@@ -59,23 +53,22 @@ const WebcamStream: React.FC<WebcamStreamProps> = ({ onFrameCaptured }) => {
       const captureFrame = () => {
         if (video.paused || video.ended) return;
 
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        canvas.width = 320;
+        canvas.height = 240;
 
         const context = canvas.getContext("2d");
 
         if (context) {
           context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-          // Convert canvas image to data URL
-          const dataURL = canvas.toDataURL("image/jpeg", 0.5); // Adjust quality if needed
-          // Call the callback function with the data URL
-          onFrameCaptured(dataURL);
+          const dataURL = canvas.toDataURL("image/jpeg", 0.5);
+          const base64Image = dataURL.split(",")[1];
+
+          onFrameCaptured(base64Image);
         }
       };
 
-      // Set up an interval to capture frames every 200 milliseconds (adjustable)
-      intervalRef.current = setInterval(captureFrame, 100); // Captures a frame every 200ms
+      intervalRef.current = setInterval(captureFrame, 500);
     }
   };
 
@@ -83,7 +76,7 @@ const WebcamStream: React.FC<WebcamStreamProps> = ({ onFrameCaptured }) => {
     <div className="relative w-full h-full">
       <video
         ref={videoRef}
-        className="absolute top-0 left-0 w-full h-full object-cover transform -scale-x-100"
+        className="absolute top-0 left-0 w-full h-full object-cover"
         autoPlay
         muted
       />
